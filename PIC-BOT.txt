@@ -1,0 +1,192 @@
+;Declare variables and set them to their inputs and outputs	
+
+symbol horizontalSens=b6 			; horizontal sensor
+symbol verticleSens=b7 			; vertical sensor
+symbol LED1 = B.3 				; first LED
+symbol LED2 = B.4 				; second LED
+symbol LED3 = B.5 				; third LED
+symbol LED4 = B.6 				; fourth LED
+symbol SS1 = C.3 				; Seven Segment Display
+symbol SS2 = C.4 				; Seven Segment Display
+symbol SS4 = C.5 				; Seven Segment Display
+symbol SS8 = C.6 				; Seven Segment Display
+symbol start = pinC.7 			; Start Button
+symbol finish = pinC.0 			; Win Button
+symbol speaker = B.7 				; Speaker
+
+servo b.1,80  					;set initial positions of horizontal servo
+servo b.2,200					;set initial positions of vertical servo
+pause 1000						;wait to finish
+
+init:
+	settimer t1s_4 				; set timer increments
+							; set these symbols to outputs
+
+	OUTPUT B.1, B.2, speaker, LED1, LED2, LED3, LED4, SS1, SS2, SS4, 			 SS8 
+
+begin:
+if start = 1 then 				; if start button is pressed
+	let timer = 65535
+	gosub startLights 			; starting light sequence
+	goto startc 				; begin reading servos input
+	end if
+goto begin 					; go back to beginning
+
+startc: 
+gosub tControl 					; go to timer 
+
+if finish = 1 then 				; if win button is pressed
+gosub FinishC 					; go to win LED sequence
+goto begin:
+else  
+
+readadc C.1,horizontalSensor 		;read horizontal sensor
+
+if horizontalSens <80 then			;if less than lower limit
+	high b.7 					;green light on yellow off
+	low b.6
+	horizontalSens =80			;force value to lower limit
+
+
+elseif horizontalSens >210 then		;if higher than high limit
+	high b.6					;yellow led on  green led off
+	low b.7			
+	horizontalSens =210			;force value to upper limit
+
+else							; if not too high or too low 								  		 turn off both lights
+	low b.7
+	low b.6
+			
+endif
+	
+readadc C.2, verticleSens			;read vertical sensor
+
+if verticleSens <80 then			;if less than lower limit
+	high b.5					;green light on  yellow led off
+	low b.4
+	verticleSens =80				;force value to lower limit
+
+
+elseif verticleSens >200 then		;if higher than high limit
+	high b.4					;yellow light on green light off
+	low b.5
+	verticleSens =200			;force value to high limit
+else
+	low b.5					;if not too high or too low
+	low b.4					;turn off both lights
+goto startC			
+endif
+
+
+servopos b.1, horizontalSens 		;update servos position
+servopos b.2, verticleSens
+
+'sertxd(#horizontalSens," ",# verticleSens,13,10)
+pause 100
+endif
+goto startC
+
+StartLights: 					;starting light / sound sequence
+HIGH LED4
+PAUSE 1000
+LOW LED4
+HIGH LED3
+PAUSE 1000
+LOW LED3
+HIGH LED2
+PAUSE 1000
+LOW LED2
+HIGH LED1
+PAUSE 1000
+LOW LED1
+HIGH LED2
+PAUSE 1000
+LOW LED2
+HIGH LED3
+PAUSE 1000
+LOW LED3
+HIGH LED4
+PAUSE 1000
+LOW LED4
+
+SOUND speaker, (300, 2000)
+return
+
+FinishC: 						; Win light / sound sequence
+HIGH LED4
+PAUSE 1000
+LOW LED4
+HIGH LED3
+PAUSE 1000
+LOW LED3
+HIGH LED2
+PAUSE 1000
+LOW LED2
+HIGH LED1
+PAUSE 1000
+LOW LED1
+HIGH LED2
+PAUSE 1000
+LOW LED2
+HIGH LED3
+PAUSE 1000
+LOW LED3
+HIGH LED4
+PAUSE 1000
+LOW LED4
+Sound speaker, (130, 110, 100, 110, 100, 110, 100, 110, 100, 110, 100)
+goto begin
+return
+
+tControl: 						; seven segment display to display timer
+	if timer = 1 then
+		HIGH sevenSegment1
+		LOW sevenSegment2
+		LOW sevenSegment4
+		LOW sevenSegment8
+	elseif timer = 2 then
+		LOW sevenSegment1
+		HIGH sevenSegment2
+		LOW sevenSegment4
+		LOW sevenSegment8
+	elseif timer = 3 then
+		HIGH sevenSegment1
+		HIGH sevenSegment2
+		LOW sevenSegment4
+		LOW sevenSegment8
+	elseif timer = 4 then
+		LOW sevenSegment1
+		LOW sevenSegment2
+		HIGH sevenSegment4
+		LOW sevenSegment8
+	elseif timer = 5 then
+		HIGH sevenSegment1
+		LOW sevenSegment2
+		HIGH sevenSegment4
+		LOW sevenSegment8
+	elseif timer = 6 then 
+		LOW sevenSegment1
+		HIGH sevenSegment2
+		HIGH sevenSegment4
+		LOW sevenSegment8
+	elseif timer = 7 then
+		HIGH sevenSegment1
+		HIGH sevenSegment2
+		HIGH sevenSegment4
+		LOW sevenSegment8
+	elseif timer = 8 then
+		LOW sevenSegment1
+		LOW sevenSegment2
+		LOW sevenSegment4
+		HIGH sevenSegment8
+	elseif timer = 9 then
+		HIGH sevenSegment1
+		LOW sevenSegment2
+		LOW sevenSegment4
+		HIGH sevenSegment8
+	elseif timer = 10 then
+		gosub Finish
+	endif 
+return
+
+
